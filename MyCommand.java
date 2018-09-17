@@ -97,4 +97,44 @@ public class MyCommand {
         }
         return rs.toString();
     }
+
+    @ShellMethod("multi not added autocommit version ")
+    public String multiSituation() throws SQLException {
+
+       Connection conn = mysqlTemplate.getDataSource().getConnection();
+//       conn.setAutoCommit(false);
+        //不对事务进行显式地声明
+       Statement st = conn.createStatement();
+       st.addBatch("delete from temp1 where id = '005'");
+       st.addBatch("insert into temp1(id,name) values('002','abcdf')");
+       st.executeBatch();
+       return null;
+    }
+
+    @ShellMethod("multi added autocommit version")
+    public String test1( ){
+        Connection conn = null;
+        Statement st = null;
+        try {
+            conn = mysqlTemplate.getDataSource().getConnection();
+            conn.setAutoCommit(false);
+            st = conn.createStatement();
+            st.addBatch("delete from temp1 where id = '003'");
+            st.addBatch("insert into temp1(id,name) values('002','abcdf')");
+            st.executeBatch();
+            conn.commit();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            try {
+                conn.rollback();
+                conn.setAutoCommit(true);
+                st.clearBatch();
+                st.close();
+            } catch (SQLException e1) {
+                e1.printStackTrace();
+            }
+
+        }
+        return null;
+    }
 }
